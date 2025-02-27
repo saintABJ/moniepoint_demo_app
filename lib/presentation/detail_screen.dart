@@ -145,8 +145,8 @@ class _DetailScreenState extends State<DetailScreen>
             ),
           ),
           Positioned(
-              top: 200,
-              right: 40,
+              top: 250,
+              right: 250,
               child: Container(
                 height: 50,
                 width: 50,
@@ -196,7 +196,7 @@ class _DetailScreenState extends State<DetailScreen>
                 ),
               )),
           Positioned(
-              bottom: 380,
+              bottom: 300,
               left: 200,
               child: Container(
                 height: 50,
@@ -213,8 +213,8 @@ class _DetailScreenState extends State<DetailScreen>
                 ),
               )),
           Positioned(
-              top: 400,
-              right: 200,
+              top: 320,
+              right: 220,
               child: Container(
                 height: 50,
                 width: 50,
@@ -271,16 +271,18 @@ class _DetailScreenState extends State<DetailScreen>
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: _selectedIndex == 0
-                              ? const Color.fromARGB(255, 255, 156, 17)
-                              : Colors.black),
-                      child: IconButton(
-                        icon: const Icon(Icons.search_rounded,
-                            color: Colors.white),
-                        onPressed: () {},
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _selectedIndex == 0
+                                ? const Color.fromARGB(255, 255, 156, 17)
+                                : Colors.black),
+                        child: IconButton(
+                          icon: const Icon(Icons.search_rounded,
+                              color: Colors.white),
+                          onPressed: () {},
+                        ),
                       ),
                     ),
                     Container(

@@ -38,6 +38,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       vsync: this,
       duration: const Duration(seconds: 5),
     )..repeat(reverse: true);
+    _sliderAnimation =
+        Tween<double>(begin: 0.0, end: _maxDrag).animate(CurvedAnimation(
+          parent: _sliderController,
+          curve: Curves.easeInOut,
+        ));
 
     // BottomNavBar Animation Controller
     _navBarController = AnimationController(
@@ -87,11 +92,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    _sliderAnimation =
-        Tween<double>(begin: 10.0, end: _maxDrag).animate(CurvedAnimation(
-      parent: _sliderController,
-      curve: Curves.easeInOut,
-    ));
     return Scaffold(
       body: Stack(children: [
         Container(
@@ -106,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(8.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -170,6 +170,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         children: [
                           Expanded(
                             child: Container(
+                              padding: const EdgeInsets.all(8),
                               width: 170.w,
                               height: 170.h,
                               decoration: const BoxDecoration(
@@ -200,34 +201,37 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                               ),
                             ),
                           ),
-                          SizedBox(width: 5.w),
-                          Container(
-                            width: 170.w, // Adjust the size as needed
-                            height: 170.h,
-                            decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.white),
-                            child: Column(
-                              children: [
-                                SizedBox(
-                                  height: 5.h,
-                                ),
-                                const Text(
-                                  'Rent',
-                                  style: TextStyle(color: Color(0xffA5957E)),
-                                ),
-                                SizedBox(
-                                  height: 30.h,
-                                ),
-                                Text(
-                                  '$_counter',
-                                  style: AppStyleRoboto.kFontW7.copyWith(
-                                      color: AppColors.secColor,
-                                      fontSize: 50.spMin),
-                                ),
-                                const Text('offers',
-                                    style: TextStyle(color: Color(0xffA5957E)))
-                              ],
+                          Expanded(
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              width: 170.w,
+                              height: 170.h,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  color: Colors.white),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 5.h,
+                                  ),
+                                  const Text(
+                                    'Rent',
+                                    style: TextStyle(color: AppColors.secColor),
+                                  ),
+                                  SizedBox(
+                                    height: 30.h,
+                                  ),
+                                  Text(
+                                    '$_counter',
+                                    style: AppStyleRoboto.kFontW7.copyWith(
+                                        color: AppColors.secColor,
+                                        fontSize: 50.spMin),
+                                  ),
+                                  const Text('offers',
+                                      style:
+                                          TextStyle(color: AppColors.secColor))
+                                ],
+                              ),
                             ),
                           ),
                         ],
@@ -256,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                             Positioned(
                               bottom: 10.h,
                               child: Container(
-                                width: _maxDrag + 60,
+                                width: _maxDrag + 70.w,
                                 height: 60.h,
                                 decoration: BoxDecoration(
                                   color: const Color(0xFFD8C6B5),
@@ -277,7 +281,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                                   left: _sliderAnimation.value,
                                   bottom: 10.h,
                                   child: Container(
-                                    width: 60.w,
+                                    width: _maxDrag - 230,
                                     height: 60.h,
                                     decoration: const BoxDecoration(
                                       shape: BoxShape.circle,
