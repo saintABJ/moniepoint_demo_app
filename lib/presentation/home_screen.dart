@@ -2,257 +2,382 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
-import 'package:moniepoint_demo_app/presentation/detail_screen.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:moniepoint_demo_app/font/roboto_styles.dart';
+import 'package:moniepoint_demo_app/widgets/bottomNav.dart';
+
+import '../constants/app_colors.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback onAccepted;
+  final bool autoSlide;
+
+  const HomeScreen(
+      {super.key, this.autoSlide = true, required this.onAccepted});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
-    with SingleTickerProviderStateMixin {
-  int _selectedIndex = 0;
-  late AnimationController _controller;
-  late Animation<double> _animation;
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+  late AnimationController _navBarController;
+  late Animation<double> _navBarAnimation;
+  late AnimationController _sliderController;
+  late Animation<double> _sliderAnimation;
   late Timer _timer;
   int _counter = 0;
+  final double _maxDrag = 320.0;
 
   @override
   void initState() {
     super.initState();
     _startAutoIncrement();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeOut);
-    SchedulerBinding.instance.addPostFrameCallback((_) {
-      _controller.forward();
-    });
-  }
 
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
+    // Slider Animation Controller
+    _sliderController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat(reverse: true);
+
+    // BottomNavBar Animation Controller
+    _navBarController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 3000),
+    );
+    _navBarAnimation =
+        CurvedAnimation(parent: _navBarController, curve: Curves.easeOut);
+
+    _navBarController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _timer.cancel();
+      }
+    });
+
+    _sliderController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        widget.onAccepted();
+      }
+    });
+    SchedulerBinding.instance.addPostFrameCallback((_) {
+      _sliderController.forward();
+      _navBarController.forward();
+      _startAutoIncrement();
     });
   }
 
   void _startAutoIncrement() {
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _counter++;
-      });
+      if (!_navBarController.isAnimating) {
+        _timer.cancel();
+      } else {
+        setState(() {
+          _counter++;
+        });
+      }
     });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _navBarController.dispose();
+    _sliderController.dispose();
     _timer.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    _sliderAnimation =
+        Tween<double>(begin: 10.0, end: _maxDrag).animate(CurvedAnimation(
+      parent: _sliderController,
+      curve: Curves.easeInOut,
+    ));
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            //  end: Alignment.bottomCenter,
-            colors: [Color(0xffA5957E), Colors.white],
+      body: Stack(children: [
+        Container(
+          decoration: const BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.centerRight,
+              end: Alignment.centerLeft,
+              colors: [Color(0xffA5957E), Colors.white],
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(
-                height: 50,
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Container(
-                    width: 140,
-                    height: 50,
-                    decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10)),
-                    child: const Padding(
-                      padding: EdgeInsets.all(8.0),
-                      child: Row(
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      SizedBox(
+                        height: 50.h,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            Icons.location_pin,
-                            color: Colors.grey,
+                          Container(
+                            width: 140,
+                            height: 50,
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.location_pin,
+                                    color: AppColors.secColor,
+                                  ),
+                                  Text(
+                                    'St Petersburg',
+                                    style: AppStyleRoboto.kFontW3.copyWith(
+                                        color: AppColors.secColor,
+                                        fontSize: 15.spMin),
+                                  )
+                                ],
+                              ),
+                            ),
                           ),
-                          Text('St Petersburg',
-                              style: TextStyle(color: Colors.grey))
+                          const CircleAvatar(
+                            child: ClipOval(
+                                child: Image(
+                                    fit: BoxFit.cover,
+                                    image: AssetImage(
+                                        'images/assets/ayodeji.png'))),
+                          )
                         ],
                       ),
-                    ),
-                  ),
-                  const CircleAvatar(
-                    backgroundColor: Colors.yellow,
-                  )
-                ],
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              Text(
-                'Hi, Marina',
-                style: TextStyle(color: Colors.grey.shade100, fontSize: 30),
-              ),
-              const Text(
-                'Let\'s select your \nperfect place',
-                style: TextStyle(color: Colors.black, fontSize: 40),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  Container(
-                    width: 170, // Adjust the size as needed
-                    height: 170,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Color.fromARGB(
-                          255, 255, 156, 17), // Change to your preferred color
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10,
-                          spreadRadius: 5,
+                      SizedBox(
+                        height: 20.h,
+                      ),
+                      Text(
+                        'Hi, Marina',
+                        style: AppStyleRoboto.kFontW5.copyWith(
+                            color: AppColors.secColor, fontSize: 30.spMin),
+                      ),
+                      Text(
+                        'Let\'s select your \nperfect place',
+                        style: AppStyleRoboto.kFontW7.copyWith(
+                            color: AppColors.textColor, fontSize: 40.spMin),
+                      ),
+                      SizedBox(
+                        height: 20.h,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          Expanded(
+                            child: Container(
+                              width: 170.w,
+                              height: 170.h,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: AppColors.primaryColor,
+                              ),
+                              child: Column(
+                                children: [
+                                  SizedBox(
+                                    height: 5.h,
+                                  ),
+                                  const Text(
+                                    'Buy',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                  SizedBox(
+                                    height: 30.h,
+                                  ),
+                                  Text(
+                                    '$_counter',
+                                    style: AppStyleRoboto.kFontW7.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 50.spMin),
+                                  ),
+                                  const Text('offers',
+                                      style: TextStyle(color: Colors.white))
+                                ],
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 5.w),
+                          Container(
+                            width: 170.w, // Adjust the size as needed
+                            height: 170.h,
+                            decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(10),
+                                color: Colors.white),
+                            child: Column(
+                              children: [
+                                SizedBox(
+                                  height: 5.h,
+                                ),
+                                const Text(
+                                  'Rent',
+                                  style: TextStyle(color: Color(0xffA5957E)),
+                                ),
+                                SizedBox(
+                                  height: 30.h,
+                                ),
+                                Text(
+                                  '$_counter',
+                                  style: AppStyleRoboto.kFontW7.copyWith(
+                                      color: AppColors.secColor,
+                                      fontSize: 50.spMin),
+                                ),
+                                const Text('offers',
+                                    style: TextStyle(color: Color(0xffA5957E)))
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 20.h,
+                      ),
+                      Container(
+                        height: 150.h,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text(
-                        "Circle",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Image.asset(
+                                'images/assets/property_2.png',
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: 150.h,
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 10.h,
+                              child: Container(
+                                width: _maxDrag + 60,
+                                height: 60.h,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD8C6B5),
+                                  borderRadius: BorderRadius.circular(50),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  "Gladkova St., 25",
+                                  style: AppStyleRoboto.kFontW5.copyWith(
+                                      color: Colors.black, fontSize: 20.spMin),
+                                ),
+                              ),
+                            ),
+                            AnimatedBuilder(
+                              animation: _sliderAnimation,
+                              builder: (context, child) {
+                                return Positioned(
+                                  left: _sliderAnimation.value,
+                                  bottom: 10.h,
+                                  child: Container(
+                                    width: 60.w,
+                                    height: 60.h,
+                                    decoration: const BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: Colors.white,
+                                    ),
+                                    child: const Icon(Icons.arrow_forward_ios),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                  ),
-                  Container(
-                    width: 170, // Adjust the size as needed
-                    height: 170,
-                    decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.white),
-                    child: Center(
-                      child: Text(
-                        '$_counter',
-                        style: const TextStyle(
-                          color: Color(0xffA5957E),
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      SizedBox(
+                        height: 20.h,
                       ),
-                    ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 200.h,
+                              width: 150.w,
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Image.asset(
+                                  'images/assets/property_3.jpg',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 10.h,
+                          ),
+                          Column(
+                            children: [
+                              Container(
+                                height: 100.h,
+                                width: 200.w,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Image.asset(
+                                    'images/assets/property_4.jpg',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                height: 10.h,
+                              ),
+                              Container(
+                                height: 100.h,
+                                width: 200.w,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(20),
+                                  child: Image.asset(
+                                    'images/assets/property_2.png',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          )
+                        ],
+                      ),
+                      SizedBox(
+                        height: 100.h,
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              Container(
-                height: 150,
-                width: double.infinity,
-                decoration:
-                    BoxDecoration(borderRadius: BorderRadius.circular(20)),
-                child: const Image(
-                    image: AssetImage('images/assets/property_1.png')),
-              ),
-              Expanded(
-                child: Row(
-                  children: [
-                    Container(
-                      height: double.infinity,
-                      width: 100,
-                      child: const Image(
-                          image: AssetImage('images/assets/property_1.png')),
-                    )
-                  ],
                 ),
-              )
+              ),
             ],
           ),
         ),
-      ),
-      bottomNavigationBar: AnimatedBuilder(
-        animation: _animation,
-        builder: (context, child) {
-          return Transform.translate(
-            offset: Offset(0, 100 * (1 - _animation.value)),
-            child: child,
-          );
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: Colors.black,
-              borderRadius: BorderRadius.circular(30),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 10,
-                  offset: Offset(0, -5),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                IconButton(
-                  icon: Icon(Icons.search_rounded,
-                      color: _selectedIndex == 0
-                          ? const Color.fromARGB(255, 255, 156, 17)
-                          : Colors.white),
-                  onPressed: () => _onItemTapped(0),
-                ),
-                IconButton(
-                  icon: Icon(Icons.message,
-                      color: _selectedIndex == 1
-                          ? const Color.fromARGB(255, 255, 156, 17)
-                          : Colors.white),
-                  onPressed: () => _onItemTapped(1),
-                ),
-                IconButton(
-                  icon: Icon(Icons.home,
-                      color: _selectedIndex == 2
-                          ? const Color.fromARGB(255, 255, 156, 17)
-                          : Colors.white),
-                  onPressed: () => _onItemTapped(2),
-                ),
-                Container(
-                  child: IconButton(
-                    icon: Icon(Icons.favorite,
-                        color: _selectedIndex == 3
-                            ? const Color.fromARGB(255, 255, 156, 17)
-                            : Colors.white),
-                    onPressed: () => _onItemTapped(3),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.person,
-                      color: _selectedIndex == 4
-                          ? const Color.fromARGB(255, 255, 156, 17)
-                          : Colors.white),
-                  onPressed: () => _onItemTapped(4),
-                ),
-              ],
-            ),
+        Positioned(
+          bottom: 0,
+          left: 0,
+          right: 0,
+          child: AnimatedBuilder(
+            animation: _navBarAnimation,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, 50 * (1 - _navBarAnimation.value)),
+                child: child,
+              );
+            },
+            child: const BuildBottomNavBar(),
           ),
-        ),
-      ),
+        )
+      ]),
     );
   }
 }
